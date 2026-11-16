@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="uz"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#000000"><link rel="manifest" href="manifest.json">
+<title>QORONG'U MAKTAB II</title>
+<style>
+*{margin:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+body{touch-action:none;background:#000;color:#d8dedc;font:13px Verdana,Tahoma,sans-serif;overflow:hidden}
+canvas{display:block}.h{display:none!important}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:2}
+#hud>div{position:absolute}
+#vig{inset:0;background:radial-gradient(transparent 38%,#000 125%)}
+#red{inset:0;background:radial-gradient(transparent 25%,#a00 150%);opacity:0}
+#flash{inset:0;background:#cfdcff;opacity:0}#fade{inset:0;background:#000;opacity:0;transition:opacity .35s}
+#grain{inset:-50%;opacity:.07;background:url(data:image/png;base64,iVBORw0KGgo=);animation:gr .4s steps(4) infinite}
+@keyframes gr{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+#cross{left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(255,255,255,.55)}
+#stats{top:12px;left:14px;text-shadow:0 0 6px #000;font-size:14px;width:240px}
+#obj{color:#ffb000;margin-bottom:6px;font-size:13px}#inv{margin-bottom:4px;min-height:18px}
+.bar{display:inline-block;width:130px;height:6px;background:#1a1a1a;border-radius:3px;overflow:hidden;vertical-align:middle}.bar i{display:block;height:100%}
+#tm{right:18px;top:12px;font-size:15px}
+#prompt{left:0;right:0;bottom:30%;text-align:center;color:#fff;font-size:16px;text-shadow:0 0 6px #000}
+#msg{left:0;right:0;bottom:20%;text-align:center;font-size:18px;color:#d44;opacity:0;transition:opacity .5s;padding:0 20px;text-shadow:0 0 8px #000}
+#lockhint{left:0;right:0;top:40%;text-align:center;font-size:18px;color:#ffb000}
+.scr{position:fixed;inset:0;z-index:5;background:rgba(0,0,0,.55)}
+.cs{position:absolute;left:7%;top:50%;transform:translateY(-50%)}
+.cs h1{font:400 clamp(30px,5vw,58px) Georgia,serif;color:#b01010;letter-spacing:.06em;text-shadow:0 0 22px #600;margin-bottom:6px}
+.cs small{display:block;color:#9a948a;margin-bottom:26px}
+.mi{display:block;background:none;border:0;color:#ffb000;font:bold 19px Verdana;text-align:left;padding:7px 0;cursor:pointer;text-shadow:0 0 6px #000}
+.mi:hover{color:#fff;padding-left:8px;transition:.15s}
+.vg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#4c5844;border:2px solid;border-color:#8c9c7c #2c3424 #2c3424 #8c9c7c;padding:16px 20px;min-width:min(440px,94vw);max-height:92vh;overflow:auto}
+.vg h2{font:bold 14px Verdana;color:#ffb000;margin-bottom:10px;border-bottom:1px solid #6c7c5c;padding-bottom:6px}
+.vb{background:#4c5844;color:#d8dedc;border:2px solid;border-color:#8c9c7c #2c3424 #2c3424 #8c9c7c;padding:6px 14px;margin:3px 3px 3px 0;font:13px Verdana;cursor:pointer}
+.vb:hover{background:#5c6c54}.vb.on{background:#7a8a3a;color:#fff}.vb.big{padding:9px 22px;font-weight:bold}
+.vg label{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:9px 0}
+.vg input,.vg select{background:#2c3424;color:#fff;border:1px solid #8c9c7c;padding:4px;font:13px Verdana;user-select:text}
+.vg input[type=range]{width:170px;padding:0}
+.rt{position:absolute;right:5%;top:50%;transform:translateY(-50%);max-width:330px;line-height:1.55;color:#aeb4a8;background:rgba(20,24,16,.7);padding:14px;border:1px solid #4c5844}
+.rt b{color:#ffb000}#pl div{padding:2px 0}
+#over h1,#win h1{font:400 clamp(30px,7vw,60px) Georgia,serif;color:#a11;text-shadow:0 0 24px #500}
+.ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(0,0,0,.85);padding:20px}
+.ctr p{margin:12px 0;color:#9a948a;max-width:480px;line-height:1.5}
+#jb{position:fixed;display:none;width:110px;height:110px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);z-index:3;pointer-events:none}
+#jk{position:fixed;display:none;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.3);z-index:3;pointer-events:none}
+#tbtn{display:none;position:fixed;inset:0;pointer-events:none}body.touch #tbtn{display:block}body.touch #lockhint,body.touch .rt{display:none!important}
+#tbtn button{position:absolute;pointer-events:auto;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(20,20,20,.45);color:#fff;font:bold 11px Verdana;width:66px;height:66px;touch-action:none;padding:0;font-size:13px}#tbtn button.hot{background:rgba(210,160,0,.7)!important;box-shadow:0 0 14px #fb0}
+#t-run{right:140px;bottom:20px}#t-use{right:134px;bottom:96px}#t-lt{right:34px;bottom:146px}#t-tr{right:108px;bottom:174px}
+body.touch #stats{font-size:14px;width:230px}body.touch .bar{width:120px;height:8px}body.touch #msg{font-size:17px;bottom:26%}body.touch #prompt{font-size:20px;bottom:36%;font-weight:bold}
+@media(max-width:700px),(max-height:500px){.cs h1{font-size:26px}.cs small{margin-bottom:10px}.mi{font-size:15px;padding:5px 0}.vg{padding:10px 14px;transform:translate(-50%,-50%) scale(.9)}.vb{padding:8px 12px}}
+</style></head><body>
+<div id="hud" class="h"><div id="vig"></div><div id="red"></div><div id="grain"></div><div id="flash"></div><div id="fade"></div><div id="cross"></div>
+<div id="stats"><div id="obj"></div><div id="inv"></div><div>❤ <span class="bar"><i id="hp" style="background:#d33"></i></span></div><div>🔦 <span class="bar"><i id="b" style="background:#e8c85a"></i></span></div><div>👟 <span class="bar"><i id="s" style="background:#5ab4e8"></i></span></div></div>
+<div id="tbtn"><button id="t-run">YUG'UR</button><button id="t-use">E</button><button id="t-lt">🔦</button><button id="t-tr">🪤</button></div>
+<div id="tm"></div><div id="prompt"></div><div id="msg"></div><div id="lockhint" class="h">Sichqonchani bosing: o'yinga qaytish</div></div>
+
+<div id="jb"></div><div id="jk"></div>
+<div class="scr" id="mm"><div class="cs"><h1>QORONG'U MAKTAB II</h1><small>Tashlandiq uy · Yupqa seni kutmoqda</small>
+<button class="mi" id="b-solo">▶ YAKKA O'YIN</button>
+<button class="mi" id="b-opt">⚙ SOZLAMALAR</button><button class="mi" onclick="location.reload()">✖ QAYTA YUKLASH</button></div>
+<div class="rt"><b>Qanday o'ynaladi</b><br>WASD yurish · Shift yugurish · Sichqoncha qarash<br>F chiroq · E ishlatish · T tuzoq qo'yish<br><br>Chordoq va podval qulflangan: avval kalitlarni top. Keyin uy, chordoq va podvaldan <b>muhrlarni</b> yig'.<br><b>Yupqa</b> senga qarab turganingda sekinlashadi, qaramasang yaqinlashadi. Chiroqdan foydalan, masofani saqla va yo'lni top.<br><br><span id="top"></span></div></div>
+
+<div class="scr h" id="solo"><div class="vg"><h2>YAKKA O'YIN — qiyinlik</h2><div id="dl"></div><div style="margin-top:12px"><button class="vb big" id="go1">BOSHLASH</button><button class="vb" data-back>Orqaga</button></div></div></div>
+
+
+<div class="scr h" id="opt"><div class="vg"><h2>SOZLAMALAR</h2>
+<label>Nickname <input id="o-nick" maxlength="16"></label>
+<label>Sichqoncha sezgirligi <input id="o-sens" type="range" min=".2" max="3" step=".05"></label>
+<label>Ko'rish burchagi (FOV) <input id="o-fov" type="range" min="60" max="110" step="1"></label>
+<label>Ovoz <input id="o-vol" type="range" min="0" max="1" step=".05"></label>
+<label>Grafika sifati <select id="o-gfx"></select></label>
+<button class="vb big" data-back>Saqlash va orqaga</button></div></div>
+
+<div class="scr h" id="over"><div class="ctr"><h1>SENI TUTISHDI</h1><p>Uy yana bir mehmonni o'z devorlari ichida saqladi.</p><button class="vb big" onclick="location.reload()">MENYUGA QAYTISH</button></div></div>
+<div class="scr h" id="win"><div class="ctr"><h1>OMON QOLDING</h1><p id="wt"></p><div id="svb"><input id="nm" class="vg" style="min-width:0;padding:8px" maxlength="16"><button class="vb" id="sv">REYTINGGA YOZISH</button></div><button class="vb big" onclick="location.reload()">MENYUGA QAYTISH</button></div></div>
+<script src="three.min.js"></script>
+<script src="game.js"></script>
+</body></html>

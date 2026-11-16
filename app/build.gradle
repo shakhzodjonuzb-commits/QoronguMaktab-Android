@@ -1,0 +1,113 @@
+import java.security.MessageDigest
+import java.net.HttpURLConnection
+
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'uz.ilhomvich.qorongumaktab'
+    compileSdk 36
+    buildToolsVersion '35.0.0'
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    defaultConfig {
+        applicationId 'uz.ilhomvich.qorongumaktab'
+        minSdk 23
+        targetSdk 36
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    buildTypes {
+        release {
+            // Deliberately unsigned: no signingConfig and no keystore are used.
+            minifyEnabled false
+            shrinkResources false
+            debuggable false
+        }
+        debug {
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}']
+        }
+    }
+}
+
+// Three.js is pinned to the same r128 version expected by the supplied game.
+// It is downloaded at BUILD time into the APK assets, so the installed game runs offline.
+tasks.register('downloadThreeJs') {
+    def target = file('src/main/assets/game/three.min.js')
+    def expectedSha1 = '7a7802bf4f08d5d7641585696b78023848e8b2df'
+    def mirrors = [
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+        'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+        'https://raw.githubusercontent.com/mrdoob/three.js/r128/build/three.min.js'
+    ]
+
+    outputs.file(target)
+
+    doLast {
+        target.parentFile.mkdirs()
+        if (target.exists()) {
+            def existingHash = MessageDigest.getInstance('SHA-1').digest(target.bytes).encodeHex().toString()
+            if (existingHash == expectedSha1) {
+                logger.lifecycle("Three.js r128 already present: ${target}")
+                return
+            }
+            target.delete()
+        }
+
+        Exception lastFailure = null
+        byte[] payload = null
+        for (String address : mirrors) {
+            HttpURLConnection connection = null
+            try {
+                logger.lifecycle("Downloading pinned Three.js dependency from ${address}")
+                connection = (HttpURLConnection) new URL(address).openConnection()
+                connection.connectTimeout = 20000
+                connection.readTimeout = 30000
+                connection.setRequestProperty('User-Agent', 'QoronguMaktab-Android-Build/1.0')
+                connection.connect()
+                if (connection.responseCode != 200) {
+                    throw new GradleException("HTTP ${connection.responseCode} from ${address}")
+                }
+                payload = connection.inputStream.withCloseable { it.bytes }
+                def digest = MessageDigest.getInstance('SHA-1').digest(payload).encodeHex().toString()
+                if (payload.length < 200000 || payload.length > 1200000 || digest != expectedSha1) {
+                    throw new GradleException("Three.js integrity check failed (size=${payload.length}, SHA-1=${digest})")
+                }
+                break
+            } catch (Exception error) {
+                lastFailure = error
+                payload = null
+                logger.warn("Mirror failed: ${error.message}")
+            } finally {
+                connection?.disconnect()
+            }
+        }
+
+        if (payload == null) {
+            throw new GradleException('Could not obtain the pinned Three.js r128 file. Check build internet access and retry.', lastFailure)
+        }
+
+        target.bytes = payload
+        logger.lifecycle("Three.js r128 installed locally (${payload.length} bytes; SHA-1 verified).")
+    }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn tasks.named('downloadThreeJs')
+}

@@ -1,0 +1,11 @@
+Third-party dependency bundled at build time
+
+Three.js r128 (0.128.0)
+Project: https://threejs.org/
+Source repository: https://github.com/mrdoob/three.js
+License: MIT
+Copyright (c) 2010-2021 three.js authors
+
+The Android Gradle build downloads the pinned minified distribution, verifies its
+SHA-1 digest, and copies it into app/src/main/assets/game/three.min.js. The APK
+contains this local file so the installed application does not need network access.
